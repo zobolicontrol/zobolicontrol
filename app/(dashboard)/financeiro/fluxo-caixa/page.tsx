@@ -18,10 +18,14 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowDownIcon, ArrowUpIcon, TrendingDown, Wallet } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, TrendingDown, Wallet, Download } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { getCashFlow } from '@/app/actions/financial'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import { toast } from 'sonner'
 
 type CashFlowEntry = {
   id: string
@@ -185,6 +189,102 @@ export default function FluxoCaixaPage() {
     }
   }
 
+  const exportToPDF = async () => {
+    const { jsPDF } = await import('jspdf')
+    const autoTable = (await import('jspdf-autotable')).default
+
+    const doc = new jsPDF()
+
+    // Adicionar logo no cabeçalho
+    try {
+      const img = new Image()
+      img.src = '/logo.png'
+      await new Promise((resolve) => {
+        img.onload = resolve
+        img.onerror = resolve
+      })
+      if (img.complete && img.naturalWidth > 0) {
+        const imgWidth = 50
+        const imgHeight = (img.naturalHeight / img.naturalWidth) * imgWidth
+        const xPos = (doc.internal.pageSize.getWidth() - imgWidth) / 2
+        doc.addImage(img, 'PNG', xPos, 10, imgWidth, imgHeight)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar logo no PDF:', error)
+    }
+
+    // Título
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Fluxo de Caixa', doc.internal.pageSize.getWidth() / 2, 32, { align: 'center' })
+
+    // Data e Período
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    const [year, month] = selectedMonth.split('-')
+    const monthName = new Date(parseInt(year), parseInt(month) - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+    doc.text(`Período: ${monthName}`, 14, 40)
+    doc.text(`Data de Geração: ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}`, 14, 46)
+
+    // Resumo
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Resumo do Período', 14, 56)
+
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Entradas: ${formatCurrency(summary.totalEntradas)}`, 14, 63)
+    doc.text(`Saídas: ${formatCurrency(summary.totalSaidas)}`, 70, 63)
+    doc.text(`Despesas: ${formatCurrency(summary.totalDespesas)}`, 120, 63)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`Saldo: ${formatCurrency(summary.saldo)}`, 170, 63)
+
+    // Dados da tabela
+    const tableData = entries.map(entry => [
+      format(new Date(entry.date), 'dd/MM/yyyy', { locale: ptBR }),
+      getTypeLabel(entry.type),
+      entry.description,
+      entry.contact || '-',
+      formatCurrency(entry.amount),
+      formatCurrency(entry.balance || 0),
+    ])
+
+    autoTable(doc, {
+      startY: 72,
+      head: [['Data', 'Tipo', 'Descrição', 'Contato', 'Valor', 'Saldo']],
+      body: tableData,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 24 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 50 },
+        3: { cellWidth: 35 },
+        4: { cellWidth: 28, halign: 'right' },
+        5: { cellWidth: 28, halign: 'right' },
+      },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      margin: { left: 14, right: 14 },
+    })
+
+    // Rodapé
+    const pageCount = doc.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.text(
+        `Página ${i} de ${pageCount}`,
+        doc.internal.pageSize.getWidth() / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: 'center' }
+      )
+    }
+
+    doc.save(`fluxo_caixa_${format(new Date(), 'ddMMyyyy_HHmm')}.pdf`)
+    toast.success('PDF exportado com sucesso!')
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -284,6 +384,14 @@ export default function FluxoCaixaPage() {
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Exportação */}
+      <div className="flex justify-end">
+        <Button onClick={exportToPDF} variant="outline" size="sm" disabled={entries.length === 0}>
+          <Download className="mr-2 h-4 w-4" />
+          Exportar PDF
+        </Button>
       </div>
 
       {/* Cash Flow Table */}

@@ -47,7 +47,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger} from '@/components/ui/popover'
 import { Combobox } from '@/components/ui/combobox'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { CalendarIcon, Plus, MoreVertical, Pencil, Trash2, DollarSign, Filter } from 'lucide-react'
+import { CalendarIcon, Plus, MoreVertical, Pencil, Trash2, DollarSign, Filter, Download } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn, formatCurrency, formatDate } from '@/lib/utils'
@@ -241,6 +241,122 @@ export default function ContasPagarPage() {
     setPaymentOpen(true)
   }
 
+  const exportToPDF = async () => {
+    const { jsPDF } = await import('jspdf')
+    const autoTable = (await import('jspdf-autotable')).default
+
+    const doc = new jsPDF()
+
+    // Adicionar logo no cabeçalho
+    try {
+      const img = new Image()
+      img.src = '/logo.png'
+      await new Promise((resolve) => {
+        img.onload = resolve
+        img.onerror = resolve
+      })
+      if (img.complete && img.naturalWidth > 0) {
+        const imgWidth = 50
+        const imgHeight = (img.naturalHeight / img.naturalWidth) * imgWidth
+        const xPos = (doc.internal.pageSize.getWidth() - imgWidth) / 2
+        doc.addImage(img, 'PNG', xPos, 10, imgWidth, imgHeight)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar logo no PDF:', error)
+    }
+
+    // Título
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Contas a Pagar', doc.internal.pageSize.getWidth() / 2, 32, { align: 'center' })
+
+    // Data de geração
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Data de Geração: ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}`, 14, 40)
+
+    // Filtros aplicados
+    let filterText = 'Filtros: '
+    if (filterStatus !== 'all') filterText += `Status: ${statusLabels[filterStatus as keyof typeof statusLabels]} • `
+    if (filterFornecedorId !== 'all') {
+      const fornecedor = fornecedores.find(f => f.id.toString() === filterFornecedorId)
+      if (fornecedor) filterText += `Fornecedor: ${fornecedor.name} • `
+    }
+    if (filterStartDate) filterText += `De: ${format(filterStartDate, 'dd/MM/yyyy', { locale: ptBR })} • `
+    if (filterEndDate) filterText += `Até: ${format(filterEndDate, 'dd/MM/yyyy', { locale: ptBR })}`
+    if (filterText === 'Filtros: ') filterText += 'Nenhum'
+
+    doc.setFontSize(9)
+    doc.text(filterText, 14, 46)
+
+    // Resumo
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Resumo Financeiro', 14, 56)
+
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Total: ${formatCurrency(summary.total)}`, 14, 63)
+    doc.text(`Pago: ${formatCurrency(summary.pago)}`, 70, 63)
+    doc.text(`Pendente: ${formatCurrency(summary.pendente)}`, 120, 63)
+    doc.text(`Vencido: ${formatCurrency(summary.vencido)}`, 170, 63)
+
+    // Dados da tabela
+    const tableData = filteredContas.map(conta => [
+      format(new Date(conta.due_date), 'dd/MM/yyyy', { locale: ptBR }),
+      conta.description,
+      conta.contacts?.name || '-',
+      formatCurrency(conta.amount),
+      formatCurrency(conta.amount_paid),
+      formatCurrency(conta.amount - conta.amount_paid),
+      statusLabels[conta.status as keyof typeof statusLabels],
+    ])
+
+    autoTable(doc, {
+      startY: 72,
+      head: [['Vencimento', 'Descrição', 'Fornecedor', 'Valor', 'Pago', 'Saldo', 'Status']],
+      body: tableData,
+      foot: [[
+        { content: 'Totais:', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold' } },
+        { content: formatCurrency(filteredContas.reduce((sum, c) => sum + c.amount, 0)), styles: { halign: 'right', fontStyle: 'bold' } },
+        { content: formatCurrency(filteredContas.reduce((sum, c) => sum + c.amount_paid, 0)), styles: { halign: 'right', fontStyle: 'bold' } },
+        { content: formatCurrency(filteredContas.reduce((sum, c) => sum + (c.amount - c.amount_paid), 0)), styles: { halign: 'right', fontStyle: 'bold' } },
+        ''
+      ]],
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [239, 68, 68], textColor: 255, fontStyle: 'bold' },
+      footStyles: { fillColor: [254, 226, 226], textColor: [239, 68, 68], fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 24 },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 25, halign: 'right' },
+        4: { cellWidth: 25, halign: 'right' },
+        5: { cellWidth: 25, halign: 'right' },
+        6: { cellWidth: 20 },
+      },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      margin: { left: 14, right: 14 },
+    })
+
+    // Rodapé
+    const pageCount = doc.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.text(
+        `Página ${i} de ${pageCount}`,
+        doc.internal.pageSize.getWidth() / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: 'center' }
+      )
+    }
+
+    doc.save(`contas_pagar_${format(new Date(), 'ddMMyyyy_HHmm')}.pdf`)
+    toast.success('PDF exportado com sucesso!')
+  }
+
   const filteredContas = filterStatus === 'all'
     ? contas
     : contas.filter((c) => c.status === filterStatus)
@@ -429,6 +545,14 @@ export default function ContasPagarPage() {
           </CardContent>
         )}
       </Card>
+
+      {/* Exportação */}
+      <div className="flex justify-end">
+        <Button onClick={exportToPDF} variant="outline" size="sm">
+          <Download className="mr-2 h-4 w-4" />
+          Exportar PDF
+        </Button>
+      </div>
 
       {/* Table */}
       <div className="rounded-lg border bg-card">
