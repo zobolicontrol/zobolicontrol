@@ -214,7 +214,7 @@ export default function RelatoriosPage() {
       doc.setFontSize(14)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(16, 185, 129)
-      doc.text(`Vendas (${vendas.length} itens - ${totalQtdVendas} unidades - Total: ${formatCurrency(totalVendas)})`, 14, currentY)
+      doc.text(`Vendas (${vendas.length} itens - Total: ${formatCurrency(totalVendas)})`, 14, currentY)
       doc.setTextColor(0, 0, 0)
 
       const vendasData = vendas.map(t => [
@@ -265,7 +265,7 @@ export default function RelatoriosPage() {
       doc.setFontSize(14)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(59, 130, 246)
-      doc.text(`Compras (${compras.length} itens - ${totalQtdCompras} unidades - Total: ${formatCurrency(totalCompras)})`, 14, currentY)
+      doc.text(`Compras (${compras.length} itens - Total: ${formatCurrency(totalCompras)})`, 14, currentY)
       doc.setTextColor(0, 0, 0)
 
       const comprasData = compras.map(t => [
@@ -328,7 +328,7 @@ export default function RelatoriosPage() {
 
       autoTable(doc, {
         startY: currentY + 6,
-        head: [['Data', 'Descrição', 'Fornecedor', 'Categoria', 'Valor']],
+        head: [['Data', 'Descrição', 'Fornecedor', 'Tipo de Despesa', 'Valor']],
         body: despesasData,
         foot: [[{ content: `Subtotal: ${formatCurrency(totalDespesasSection)}`, colSpan: 5, styles: { halign: 'right', fontStyle: 'bold', fillColor: [254, 226, 226] } }]],
         styles: { fontSize: 8, cellPadding: 2 },
@@ -657,7 +657,7 @@ export default function RelatoriosPage() {
                         Vendas
                       </CardTitle>
                       <CardDescription>
-                        {vendas.length} transação(ões) • {totalQuantidadeVendas} unidades • Total: {formatCurrency(totalVendas)}
+                        {vendas.length} transação(ões) • Total: {formatCurrency(totalVendas)}
                       </CardDescription>
                     </div>
                   </div>
@@ -734,7 +734,7 @@ export default function RelatoriosPage() {
                         Compras
                       </CardTitle>
                       <CardDescription>
-                        {compras.length} transação(ões) • {totalQuantidadeCompras} unidades • Total: {formatCurrency(totalCompras)}
+                        {compras.length} transação(ões) • Total: {formatCurrency(totalCompras)}
                       </CardDescription>
                     </div>
                   </div>
@@ -823,7 +823,7 @@ export default function RelatoriosPage() {
                           <TableHead className="min-w-[100px]">Data</TableHead>
                           <TableHead className="min-w-[150px]">Descrição</TableHead>
                           <TableHead className="min-w-[120px] hidden sm:table-cell">Fornecedor</TableHead>
-                          <TableHead className="min-w-[120px] hidden md:table-cell">Categoria</TableHead>
+                          <TableHead className="min-w-[130px] hidden md:table-cell">Tipo de Despesa</TableHead>
                           <TableHead className="text-right min-w-[100px]">Valor</TableHead>
                         </TableRow>
                       </TableHeader>
