@@ -38,7 +38,6 @@ export default function RelatoriosPage() {
   const [selectedYear, setSelectedYear] = useState(currentYear.toString())
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(false)
-  const [filterType, setFilterType] = useState<'all' | 'entrada' | 'saida' | 'despesa'>('all')
   const [filterContactId, setFilterContactId] = useState<string>('all')
   const [contacts, setContacts] = useState<Contact[]>([])
   const [compareType, setCompareType] = useState<'month' | 'year'>('month')
@@ -198,44 +197,148 @@ export default function RelatoriosPage() {
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
     const summaryY = 52
-    doc.text(`Total Entradas (Compras): ${formatCurrency(totalEntradas)}`, 14, summaryY)
-    doc.text(`Total Saídas (Vendas): ${formatCurrency(totalSaidas)}`, 14, summaryY + 6)
+    doc.text(`Total Vendas: ${formatCurrency(totalSaidas)}`, 14, summaryY)
+    doc.text(`Total Compras: ${formatCurrency(totalEntradas)}`, 14, summaryY + 6)
     doc.text(`Total Despesas: ${formatCurrency(totalDespesas)}`, 14, summaryY + 12)
     doc.setFont('helvetica', 'bold')
     doc.text(`Fluxo de Caixa: ${formatCurrency(fluxoCaixa)}`, 14, summaryY + 18)
 
-    // Tabela de Transações
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Transações do Período', 14, summaryY + 28)
+    let currentY = summaryY + 30
 
-    const tableData = filteredTransactions.map(t => [
-      format(new Date(t.transaction_date), 'dd/MM/yyyy', { locale: ptBR }),
-      typeLabels[t.type],
-      t.description,
-      t.contacts?.name || '-',
-      t.products?.name || t.expense_types?.name || '-',
-      formatCurrency(t.amount),
-    ])
+    // Seção de Vendas
+    const vendas = filteredTransactions.filter(t => t.type === 'saida')
+    if (vendas.length > 0) {
+      const totalVendas = vendas.reduce((sum, t) => sum + t.amount, 0)
 
-    // Usar autoTable corretamente
-    autoTable(doc, {
-      startY: summaryY + 34,
-      head: [['Data', 'Tipo', 'Descrição', 'Contato', 'Produto/Categoria', 'Valor']],
-      body: tableData,
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
-      columnStyles: {
-        0: { cellWidth: 22 },
-        1: { cellWidth: 20 },
-        2: { cellWidth: 45 },
-        3: { cellWidth: 35 },
-        4: { cellWidth: 35 },
-        5: { cellWidth: 25, halign: 'right' },
-      },
-      alternateRowStyles: { fillColor: [245, 245, 245] },
-      margin: { left: 14, right: 14 },
-    })
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(16, 185, 129)
+      doc.text(`Vendas (${vendas.length} itens - Total: ${formatCurrency(totalVendas)})`, 14, currentY)
+      doc.setTextColor(0, 0, 0)
+
+      const vendasData = vendas.map(t => [
+        format(new Date(t.transaction_date), 'dd/MM/yyyy', { locale: ptBR }),
+        t.description,
+        t.contacts?.name || '-',
+        t.products?.name || '-',
+        formatCurrency(t.amount),
+      ])
+
+      autoTable(doc, {
+        startY: currentY + 6,
+        head: [['Data', 'Descrição', 'Cliente', 'Produto', 'Valor']],
+        body: vendasData,
+        foot: [[{ content: `Subtotal: ${formatCurrency(totalVendas)}`, colSpan: 5, styles: { halign: 'right', fontStyle: 'bold', fillColor: [220, 252, 231] } }]],
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
+        footStyles: { fillColor: [220, 252, 231], textColor: [16, 185, 129], fontStyle: 'bold' },
+        columnStyles: {
+          0: { cellWidth: 22 },
+          1: { cellWidth: 50 },
+          2: { cellWidth: 35 },
+          3: { cellWidth: 35 },
+          4: { cellWidth: 25, halign: 'right' },
+        },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        margin: { left: 14, right: 14 },
+      })
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      currentY = (doc as any).lastAutoTable.finalY + 10
+    }
+
+    // Seção de Compras
+    const compras = filteredTransactions.filter(t => t.type === 'entrada')
+    if (compras.length > 0) {
+      const totalCompras = compras.reduce((sum, t) => sum + t.amount, 0)
+
+      // Adicionar nova página se necessário
+      if (currentY > 220) {
+        doc.addPage()
+        currentY = 20
+      }
+
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(59, 130, 246)
+      doc.text(`Compras (${compras.length} itens - Total: ${formatCurrency(totalCompras)})`, 14, currentY)
+      doc.setTextColor(0, 0, 0)
+
+      const comprasData = compras.map(t => [
+        format(new Date(t.transaction_date), 'dd/MM/yyyy', { locale: ptBR }),
+        t.description,
+        t.contacts?.name || '-',
+        t.products?.name || '-',
+        formatCurrency(t.amount),
+      ])
+
+      autoTable(doc, {
+        startY: currentY + 6,
+        head: [['Data', 'Descrição', 'Fornecedor', 'Produto', 'Valor']],
+        body: comprasData,
+        foot: [[{ content: `Subtotal: ${formatCurrency(totalCompras)}`, colSpan: 5, styles: { halign: 'right', fontStyle: 'bold', fillColor: [219, 234, 254] } }]],
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+        footStyles: { fillColor: [219, 234, 254], textColor: [59, 130, 246], fontStyle: 'bold' },
+        columnStyles: {
+          0: { cellWidth: 22 },
+          1: { cellWidth: 50 },
+          2: { cellWidth: 35 },
+          3: { cellWidth: 35 },
+          4: { cellWidth: 25, halign: 'right' },
+        },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        margin: { left: 14, right: 14 },
+      })
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      currentY = (doc as any).lastAutoTable.finalY + 10
+    }
+
+    // Seção de Despesas
+    const despesas = filteredTransactions.filter(t => t.type === 'despesa')
+    if (despesas.length > 0) {
+      const totalDespesasSection = despesas.reduce((sum, t) => sum + t.amount, 0)
+
+      // Adicionar nova página se necessário
+      if (currentY > 220) {
+        doc.addPage()
+        currentY = 20
+      }
+
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(239, 68, 68)
+      doc.text(`Despesas (${despesas.length} itens - Total: ${formatCurrency(totalDespesasSection)})`, 14, currentY)
+      doc.setTextColor(0, 0, 0)
+
+      const despesasData = despesas.map(t => [
+        format(new Date(t.transaction_date), 'dd/MM/yyyy', { locale: ptBR }),
+        t.description,
+        t.contacts?.name || '-',
+        t.expense_types?.name || '-',
+        formatCurrency(t.amount),
+      ])
+
+      autoTable(doc, {
+        startY: currentY + 6,
+        head: [['Data', 'Descrição', 'Fornecedor', 'Categoria', 'Valor']],
+        body: despesasData,
+        foot: [[{ content: `Subtotal: ${formatCurrency(totalDespesasSection)}`, colSpan: 5, styles: { halign: 'right', fontStyle: 'bold', fillColor: [254, 226, 226] } }]],
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [239, 68, 68], textColor: 255, fontStyle: 'bold' },
+        footStyles: { fillColor: [254, 226, 226], textColor: [239, 68, 68], fontStyle: 'bold' },
+        columnStyles: {
+          0: { cellWidth: 22 },
+          1: { cellWidth: 50 },
+          2: { cellWidth: 35 },
+          3: { cellWidth: 35 },
+          4: { cellWidth: 25, halign: 'right' },
+        },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        margin: { left: 14, right: 14 },
+      })
+    }
 
     // Rodapé
     const pageCount = doc.getNumberOfPages()
@@ -243,6 +346,7 @@ export default function RelatoriosPage() {
       doc.setPage(i)
       doc.setFontSize(8)
       doc.setFont('helvetica', 'normal')
+      doc.setTextColor(0, 0, 0)
       doc.text(
         `Página ${i} de ${pageCount}`,
         doc.internal.pageSize.getWidth() / 2,
@@ -259,10 +363,6 @@ export default function RelatoriosPage() {
   }
 
   let filteredTransactions = transactions
-
-  if (filterType !== 'all') {
-    filteredTransactions = filteredTransactions.filter((t) => t.type === filterType)
-  }
 
   if (filterContactId !== 'all') {
     filteredTransactions = filteredTransactions.filter((t) => t.contact_id?.toString() === filterContactId)
@@ -286,12 +386,6 @@ export default function RelatoriosPage() {
     entrada: 'Compra',
     saida: 'Venda',
     despesa: 'Despesa',
-  }
-
-  const typeBadgeColors = {
-    entrada: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
-    saida: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
-    despesa: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
   }
 
   const calculatePeriodTotals = (transactions: Transaction[]) => {
@@ -513,96 +607,241 @@ export default function RelatoriosPage() {
         </Card>
       </div>
 
-      {/* Tabela de Transações */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <CardTitle>Transações do Período</CardTitle>
-              <CardDescription>
-                {filteredTransactions.length} transação(ões) encontrada(s)
-              </CardDescription>
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <Select value={filterType} onValueChange={(v) => setFilterType(v as 'all' | 'entrada' | 'saida' | 'despesa')}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Filtrar por tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="entrada">Compras</SelectItem>
-                  <SelectItem value="saida">Vendas</SelectItem>
-                  <SelectItem value="despesa">Despesas</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex gap-2">
-                <Button onClick={exportToCSV} variant="outline" size="sm" className="flex-1 sm:flex-none">
-                  <Download className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Exportar </span>CSV
-                </Button>
-                <Button onClick={exportToPDF} variant="outline" size="sm" className="flex-1 sm:flex-none">
-                  <Download className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Exportar </span>PDF
-                </Button>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-lg border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="min-w-[100px]">Data</TableHead>
-                  <TableHead className="min-w-[80px]">Tipo</TableHead>
-                  <TableHead className="min-w-[150px]">Descrição</TableHead>
-                  <TableHead className="min-w-[120px] hidden sm:table-cell">Contato</TableHead>
-                  <TableHead className="min-w-[120px] hidden md:table-cell">Produto/Categoria</TableHead>
-                  <TableHead className="text-right min-w-[100px]">Valor</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      Carregando...
-                    </TableCell>
-                  </TableRow>
-                ) : filteredTransactions.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      Nenhuma transação encontrada neste período
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredTransactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell className="whitespace-nowrap text-xs sm:text-sm">
-                        {format(new Date(transaction.transaction_date), 'dd/MM/yyyy', { locale: ptBR })}
-                      </TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${typeBadgeColors[transaction.type]}`}>
-                          {typeLabels[transaction.type]}
-                        </span>
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate text-xs sm:text-sm">{transaction.description}</TableCell>
-                      <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
-                        {transaction.contacts?.name || '-'}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-xs sm:text-sm">
-                        {transaction.products?.name || transaction.expense_types?.name || '-'}
-                      </TableCell>
-                      <TableCell className="text-right font-medium whitespace-nowrap text-sm sm:text-base">
-                        {formatCurrency(transaction.amount)}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Botões de Exportação */}
+      <div className="flex justify-end gap-2">
+        <Button onClick={exportToCSV} variant="outline" size="sm" className="flex-1 sm:flex-none">
+          <Download className="mr-2 h-4 w-4" />
+          <span className="hidden sm:inline">Exportar </span>CSV
+        </Button>
+        <Button onClick={exportToPDF} variant="outline" size="sm" className="flex-1 sm:flex-none">
+          <Download className="mr-2 h-4 w-4" />
+          <span className="hidden sm:inline">Exportar </span>PDF
+        </Button>
+      </div>
+
+      {/* Seções de Transações por Tipo */}
+      {loading ? (
+        <Card>
+          <CardContent className="text-center py-8">
+            Carregando...
+          </CardContent>
+        </Card>
+      ) : filteredTransactions.length === 0 ? (
+        <Card>
+          <CardContent className="text-center py-8 text-muted-foreground">
+            Nenhuma transação encontrada neste período
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Seção de Vendas */}
+          {(() => {
+            const vendas = filteredTransactions.filter(t => t.type === 'saida')
+            const totalVendas = vendas.reduce((sum, t) => sum + t.amount, 0)
+            if (vendas.length === 0) return null
+
+            return (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-green-600 flex items-center gap-2">
+                        <ArrowUpIcon className="h-5 w-5" />
+                        Vendas
+                      </CardTitle>
+                      <CardDescription>
+                        {vendas.length} transação(ões) • Total: {formatCurrency(totalVendas)}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-lg border overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="min-w-[100px]">Data</TableHead>
+                          <TableHead className="min-w-[150px]">Descrição</TableHead>
+                          <TableHead className="min-w-[120px] hidden sm:table-cell">Cliente</TableHead>
+                          <TableHead className="min-w-[120px] hidden md:table-cell">Produto</TableHead>
+                          <TableHead className="text-right min-w-[100px]">Valor</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {vendas.map((transaction) => (
+                          <TableRow key={transaction.id}>
+                            <TableCell className="whitespace-nowrap text-xs sm:text-sm">
+                              {format(new Date(transaction.transaction_date), 'dd/MM/yyyy', { locale: ptBR })}
+                            </TableCell>
+                            <TableCell className="max-w-[200px] truncate text-xs sm:text-sm">
+                              {transaction.description}
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
+                              {transaction.contacts?.name || '-'}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell text-xs sm:text-sm">
+                              {transaction.products?.name || '-'}
+                            </TableCell>
+                            <TableCell className="text-right font-medium whitespace-nowrap text-sm sm:text-base text-green-600">
+                              {formatCurrency(transaction.amount)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="bg-green-50 dark:bg-green-950 font-bold">
+                          <TableCell colSpan={4} className="text-right">
+                            Subtotal de Vendas ({vendas.length} itens):
+                          </TableCell>
+                          <TableCell className="text-right text-green-600 font-bold text-base">
+                            {formatCurrency(totalVendas)}
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })()}
+
+          {/* Seção de Compras */}
+          {(() => {
+            const compras = filteredTransactions.filter(t => t.type === 'entrada')
+            const totalCompras = compras.reduce((sum, t) => sum + t.amount, 0)
+            if (compras.length === 0) return null
+
+            return (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-blue-600 flex items-center gap-2">
+                        <ArrowDownIcon className="h-5 w-5" />
+                        Compras
+                      </CardTitle>
+                      <CardDescription>
+                        {compras.length} transação(ões) • Total: {formatCurrency(totalCompras)}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-lg border overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="min-w-[100px]">Data</TableHead>
+                          <TableHead className="min-w-[150px]">Descrição</TableHead>
+                          <TableHead className="min-w-[120px] hidden sm:table-cell">Fornecedor</TableHead>
+                          <TableHead className="min-w-[120px] hidden md:table-cell">Produto</TableHead>
+                          <TableHead className="text-right min-w-[100px]">Valor</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {compras.map((transaction) => (
+                          <TableRow key={transaction.id}>
+                            <TableCell className="whitespace-nowrap text-xs sm:text-sm">
+                              {format(new Date(transaction.transaction_date), 'dd/MM/yyyy', { locale: ptBR })}
+                            </TableCell>
+                            <TableCell className="max-w-[200px] truncate text-xs sm:text-sm">
+                              {transaction.description}
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
+                              {transaction.contacts?.name || '-'}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell text-xs sm:text-sm">
+                              {transaction.products?.name || '-'}
+                            </TableCell>
+                            <TableCell className="text-right font-medium whitespace-nowrap text-sm sm:text-base text-blue-600">
+                              {formatCurrency(transaction.amount)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="bg-blue-50 dark:bg-blue-950 font-bold">
+                          <TableCell colSpan={4} className="text-right">
+                            Subtotal de Compras ({compras.length} itens):
+                          </TableCell>
+                          <TableCell className="text-right text-blue-600 font-bold text-base">
+                            {formatCurrency(totalCompras)}
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })()}
+
+          {/* Seção de Despesas */}
+          {(() => {
+            const despesas = filteredTransactions.filter(t => t.type === 'despesa')
+            const totalDespesasSection = despesas.reduce((sum, t) => sum + t.amount, 0)
+            if (despesas.length === 0) return null
+
+            return (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-red-600 flex items-center gap-2">
+                        <DollarSignIcon className="h-5 w-5" />
+                        Despesas
+                      </CardTitle>
+                      <CardDescription>
+                        {despesas.length} transação(ões) • Total: {formatCurrency(totalDespesasSection)}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-lg border overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="min-w-[100px]">Data</TableHead>
+                          <TableHead className="min-w-[150px]">Descrição</TableHead>
+                          <TableHead className="min-w-[120px] hidden sm:table-cell">Fornecedor</TableHead>
+                          <TableHead className="min-w-[120px] hidden md:table-cell">Categoria</TableHead>
+                          <TableHead className="text-right min-w-[100px]">Valor</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {despesas.map((transaction) => (
+                          <TableRow key={transaction.id}>
+                            <TableCell className="whitespace-nowrap text-xs sm:text-sm">
+                              {format(new Date(transaction.transaction_date), 'dd/MM/yyyy', { locale: ptBR })}
+                            </TableCell>
+                            <TableCell className="max-w-[200px] truncate text-xs sm:text-sm">
+                              {transaction.description}
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
+                              {transaction.contacts?.name || '-'}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell text-xs sm:text-sm">
+                              {transaction.expense_types?.name || '-'}
+                            </TableCell>
+                            <TableCell className="text-right font-medium whitespace-nowrap text-sm sm:text-base text-red-600">
+                              {formatCurrency(transaction.amount)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="bg-red-50 dark:bg-red-950 font-bold">
+                          <TableCell colSpan={4} className="text-right">
+                            Subtotal de Despesas ({despesas.length} itens):
+                          </TableCell>
+                          <TableCell className="text-right text-red-600 font-bold text-base">
+                            {formatCurrency(totalDespesasSection)}
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })()}
+        </>
+      )}
         </TabsContent>
 
         <TabsContent value="comparative" className="space-y-6">
