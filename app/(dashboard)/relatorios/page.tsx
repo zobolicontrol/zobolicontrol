@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar as CalendarComponent } from '@/components/ui/calendar'
+import { Combobox } from '@/components/ui/combobox'
 import { getTransactionsByDateRange, type Transaction } from '@/app/actions/transactions'
 import { getContacts, type Contact } from '@/app/actions/contacts'
 import { formatCurrency, formatDateTime, cn } from '@/lib/utils'
@@ -347,19 +348,20 @@ export default function RelatoriosPage() {
               {/* Filtro de Contato */}
               <div className="space-y-2">
                 <Label>Contato (Opcional)</Label>
-                <Select value={filterContactId} onValueChange={setFilterContactId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {contacts.map((contact) => (
-                      <SelectItem key={contact.id} value={contact.id.toString()}>
-                        {contact.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  options={[
+                    { value: 'all', label: 'Todos' },
+                    ...contacts.map((contact) => ({
+                      value: contact.id.toString(),
+                      label: `${contact.name} (${contact.type === 'cliente' ? 'Cliente' : 'Fornecedor'})`,
+                    })),
+                  ]}
+                  value={filterContactId}
+                  onValueChange={setFilterContactId}
+                  placeholder="Selecione um contato"
+                  searchPlaceholder="Buscar contato..."
+                  emptyText="Nenhum contato encontrado."
+                />
               </div>
             </CardContent>
           </Card>

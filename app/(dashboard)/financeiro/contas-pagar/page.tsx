@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger} from '@/components/ui/popover'
+import { Combobox } from '@/components/ui/combobox'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CalendarIcon, Plus, MoreVertical, Pencil, Trash2, DollarSign, Filter } from 'lucide-react'
 import { format } from 'date-fns'
@@ -344,19 +345,20 @@ export default function ContasPagarPage() {
 
               <div className="space-y-2">
                 <Label>Fornecedor</Label>
-                <Select value={filterFornecedorId} onValueChange={setFilterFornecedorId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {fornecedores.map((forn) => (
-                      <SelectItem key={forn.id} value={forn.id.toString()}>
-                        {forn.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  options={[
+                    { value: 'all', label: 'Todos' },
+                    ...fornecedores.map((forn) => ({
+                      value: forn.id.toString(),
+                      label: forn.name,
+                    })),
+                  ]}
+                  value={filterFornecedorId}
+                  onValueChange={setFilterFornecedorId}
+                  placeholder="Selecione um fornecedor"
+                  searchPlaceholder="Buscar fornecedor..."
+                  emptyText="Nenhum fornecedor encontrado."
+                />
               </div>
 
               <div className="space-y-2">

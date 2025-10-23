@@ -94,11 +94,14 @@ export default function FluxoCaixaPage() {
     consolidated.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
     // Calculate running balance
+    // ATENÇÃO: No banco, 'entrada' = compra (saída de $) e 'saida' = venda (entrada de $)
     let runningBalance = 0
     const entriesWithBalance = consolidated.map(entry => {
-      if (entry.type === 'entrada' || entry.type === 'recebimento') {
+      if (entry.type === 'saida' || entry.type === 'recebimento') {
+        // 'saida' no banco = VENDA = entrada de dinheiro no caixa
         runningBalance += entry.amount
-      } else if (entry.type === 'saida' || entry.type === 'pagamento' || entry.type === 'despesa') {
+      } else if (entry.type === 'entrada' || entry.type === 'pagamento' || entry.type === 'despesa') {
+        // 'entrada' no banco = COMPRA = saída de dinheiro do caixa
         runningBalance -= entry.amount
       }
       return { ...entry, balance: runningBalance }
@@ -107,12 +110,13 @@ export default function FluxoCaixaPage() {
     setEntries(entriesWithBalance)
 
     // Calculate summary
+    // ATENÇÃO: No banco, 'entrada' = compra (saída de $) e 'saida' = venda (entrada de $)
     const totalEntradas = consolidated
-      .filter(e => e.type === 'entrada' || e.type === 'recebimento')
+      .filter(e => e.type === 'saida' || e.type === 'recebimento') // 'saida' = venda = entrada $
       .reduce((sum, e) => sum + e.amount, 0)
 
     const totalSaidas = consolidated
-      .filter(e => e.type === 'saida' || e.type === 'pagamento')
+      .filter(e => e.type === 'entrada' || e.type === 'pagamento') // 'entrada' = compra = saída $
       .reduce((sum, e) => sum + e.amount, 0)
 
     const totalDespesas = consolidated
@@ -145,11 +149,12 @@ export default function FluxoCaixaPage() {
   }
 
   const getTypeColor = (type: string) => {
+    // ATENÇÃO: No banco, 'entrada' = compra (saída de $) e 'saida' = venda (entrada de $)
     switch (type) {
-      case 'entrada':
+      case 'saida': // venda = entrada de dinheiro
       case 'recebimento':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-      case 'saida':
+      case 'entrada': // compra = saída de dinheiro
       case 'pagamento':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
       case 'despesa':
@@ -160,9 +165,10 @@ export default function FluxoCaixaPage() {
   }
 
   const getTypeLabel = (type: string) => {
+    // ATENÇÃO: No banco, 'entrada' = compra (saída de $) e 'saida' = venda (entrada de $)
     const labels: Record<string, string> = {
-      entrada: 'Entrada (Venda)',
-      saida: 'Saída (Compra)',
+      entrada: 'Compra',
+      saida: 'Venda',
       despesa: 'Despesa',
       pagamento: 'Pagamento',
       recebimento: 'Recebimento',
@@ -171,7 +177,8 @@ export default function FluxoCaixaPage() {
   }
 
   const getTypeIcon = (type: string) => {
-    if (type === 'entrada' || type === 'recebimento') {
+    // ATENÇÃO: No banco, 'entrada' = compra (saída de $) e 'saida' = venda (entrada de $)
+    if (type === 'saida' || type === 'recebimento') {
       return <ArrowUpIcon className="h-4 w-4 text-green-600" />
     } else {
       return <ArrowDownIcon className="h-4 w-4 text-red-600" />
@@ -331,11 +338,11 @@ export default function FluxoCaixaPage() {
                         {entry.contact || entry.category || '-'}
                       </TableCell>
                       <TableCell className={`text-right font-medium ${
-                        entry.type === 'entrada' || entry.type === 'recebimento'
+                        entry.type === 'saida' || entry.type === 'recebimento'
                           ? 'text-green-600'
                           : 'text-red-600'
                       }`}>
-                        {entry.type === 'entrada' || entry.type === 'recebimento' ? '+' : '-'}
+                        {entry.type === 'saida' || entry.type === 'recebimento' ? '+' : '-'}
                         {formatCurrency(entry.amount)}
                       </TableCell>
                       <TableCell className={`text-right font-bold ${

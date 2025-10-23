@@ -5,13 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   Table,
   TableBody,
   TableCell,
@@ -46,6 +39,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Combobox } from '@/components/ui/combobox'
 import { Plus, MoreVertical, Pencil, Trash2, CalendarIcon, ChevronLeft, ChevronRight, Filter } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -246,19 +240,20 @@ export default function DespesasPage() {
             <div className="grid gap-4 md:grid-cols-4">
               <div className="space-y-2">
                 <Label>Fornecedor</Label>
-                <Select value={filterFornecedorId} onValueChange={setFilterFornecedorId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos os fornecedores" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os fornecedores</SelectItem>
-                    {fornecedores.map((fornecedor) => (
-                      <SelectItem key={fornecedor.id} value={fornecedor.id.toString()}>
-                        {fornecedor.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  options={[
+                    { value: 'all', label: 'Todos os fornecedores' },
+                    ...fornecedores.map((fornecedor) => ({
+                      value: fornecedor.id.toString(),
+                      label: fornecedor.name,
+                    })),
+                  ]}
+                  value={filterFornecedorId}
+                  onValueChange={setFilterFornecedorId}
+                  placeholder="Selecione um fornecedor"
+                  searchPlaceholder="Buscar fornecedor..."
+                  emptyText="Nenhum fornecedor encontrado."
+                />
               </div>
 
               <div className="space-y-2">
@@ -467,44 +462,37 @@ export default function DespesasPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="expense_type">Tipo de Despesa *</Label>
-                  <Select
+                  <Combobox
+                    options={tiposDespesa.map((tipo) => ({
+                      value: tipo.id.toString(),
+                      label: tipo.name,
+                    }))}
                     value={formData.expense_type_id}
                     onValueChange={(value) => setFormData({ ...formData, expense_type_id: value })}
+                    placeholder="Selecione um tipo de despesa"
+                    searchPlaceholder="Buscar tipo..."
+                    emptyText="Nenhum tipo encontrado."
                     disabled={isPending}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tiposDespesa.map((tipo) => (
-                        <SelectItem key={tipo.id} value={tipo.id.toString()}>
-                          {tipo.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="supplier">Fornecedor (Opcional)</Label>
-                  <Select
+                  <Combobox
+                    options={[
+                      { value: 'none', label: 'Nenhum' },
+                      ...fornecedores.map((fornecedor) => ({
+                        value: fornecedor.id.toString(),
+                        label: fornecedor.name,
+                      })),
+                    ]}
                     value={formData.contact_id}
                     onValueChange={(value) => setFormData({ ...formData, contact_id: value })}
+                    placeholder="Selecione um fornecedor"
+                    searchPlaceholder="Buscar fornecedor..."
+                    emptyText="Nenhum fornecedor encontrado."
                     disabled={isPending}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Nenhum</SelectItem>
-                      {fornecedores.map((fornecedor) => (
-                        <SelectItem key={fornecedor.id} value={fornecedor.id.toString()}>
-                          {fornecedor.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                 </div>
 
                 <div className="space-y-2 md:col-span-2">

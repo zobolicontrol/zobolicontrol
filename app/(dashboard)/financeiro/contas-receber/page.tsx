@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger} from '@/components/ui/popover'
+import { Combobox } from '@/components/ui/combobox'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CalendarIcon, Plus, MoreVertical, Pencil, Trash2, DollarSign, Filter } from 'lucide-react'
 import { format } from 'date-fns'
@@ -344,19 +345,20 @@ export default function ContasReceberPage() {
 
               <div className="space-y-2">
                 <Label>Cliente</Label>
-                <Select value={filterClienteId} onValueChange={setFilterClienteId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {clientes.map((cliente) => (
-                      <SelectItem key={cliente.id} value={cliente.id.toString()}>
-                        {cliente.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  options={[
+                    { value: 'all', label: 'Todos' },
+                    ...clientes.map((cliente) => ({
+                      value: cliente.id.toString(),
+                      label: cliente.name,
+                    })),
+                  ]}
+                  value={filterClienteId}
+                  onValueChange={setFilterClienteId}
+                  placeholder="Selecione um cliente"
+                  searchPlaceholder="Buscar cliente..."
+                  emptyText="Nenhum cliente encontrado."
+                />
               </div>
 
               <div className="space-y-2">

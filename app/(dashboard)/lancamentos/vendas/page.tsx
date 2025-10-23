@@ -5,13 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   Table,
   TableBody,
   TableCell,
@@ -46,6 +39,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Combobox } from '@/components/ui/combobox'
 import { Plus, MoreVertical, Pencil, Trash2, CalendarIcon, ChevronLeft, ChevronRight, Filter } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -260,19 +254,20 @@ export default function VendasPage() {
             <div className="grid gap-4 md:grid-cols-4">
               <div className="space-y-2">
                 <Label>Cliente</Label>
-                <Select value={filterClienteId} onValueChange={setFilterClienteId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos os clientes" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os clientes</SelectItem>
-                    {clientes.map((cliente) => (
-                      <SelectItem key={cliente.id} value={cliente.id.toString()}>
-                        {cliente.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  options={[
+                    { value: 'all', label: 'Todos os clientes' },
+                    ...clientes.map((cliente) => ({
+                      value: cliente.id.toString(),
+                      label: cliente.name,
+                    })),
+                  ]}
+                  value={filterClienteId}
+                  onValueChange={setFilterClienteId}
+                  placeholder="Selecione um cliente"
+                  searchPlaceholder="Buscar cliente..."
+                  emptyText="Nenhum cliente encontrado."
+                />
               </div>
 
               <div className="space-y-2">
@@ -483,44 +478,34 @@ export default function VendasPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="client">Cliente *</Label>
-                  <Select
+                  <Combobox
+                    options={clientes.map((cliente) => ({
+                      value: cliente.id.toString(),
+                      label: cliente.name,
+                    }))}
                     value={formData.contact_id}
                     onValueChange={(value) => setFormData({ ...formData, contact_id: value })}
+                    placeholder="Selecione um cliente"
+                    searchPlaceholder="Buscar cliente..."
+                    emptyText="Nenhum cliente encontrado."
                     disabled={isPending}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clientes.map((cliente) => (
-                        <SelectItem key={cliente.id} value={cliente.id.toString()}>
-                          {cliente.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="product">Produto *</Label>
-                  <Select
+                  <Combobox
+                    options={produtos.map((produto) => ({
+                      value: produto.id.toString(),
+                      label: `${produto.name} (${produto.unit})`,
+                    }))}
                     value={formData.product_id}
                     onValueChange={(value) => setFormData({ ...formData, product_id: value })}
+                    placeholder="Selecione um produto"
+                    searchPlaceholder="Buscar produto..."
+                    emptyText="Nenhum produto encontrado."
                     disabled={isPending}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {produtos.map((produto) => (
-                        <SelectItem key={produto.id} value={produto.id.toString()}>
-                          {produto.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                 </div>
 
                 <div className="space-y-2">
