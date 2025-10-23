@@ -71,9 +71,9 @@ export default function LoginPage() {
             <Image
               src="/logo.png"
               alt="ZoboliControl"
-              width={320}
-              height={96}
-              className="h-auto w-full max-w-sm px-4"
+              width={640}
+              height={192}
+              className="h-auto w-full max-w-lg px-2"
               priority
             />
           </div>
