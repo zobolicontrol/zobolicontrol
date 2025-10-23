@@ -217,30 +217,35 @@ export default function RelatoriosPage() {
       doc.text(`Vendas (${vendas.length} itens - Total: ${formatCurrency(totalVendas)})`, 14, currentY)
       doc.setTextColor(0, 0, 0)
 
-      const vendasData = vendas.map(t => [
-        format(new Date(t.transaction_date), 'dd/MM/yyyy', { locale: ptBR }),
-        t.description,
-        t.contacts?.name || '-',
-        t.products?.name || '-',
-        (t.quantity || 0).toString(),
-        formatCurrency(t.amount),
-      ])
+      const vendasData = vendas.map(t => {
+        const unitPrice = t.quantity && t.quantity > 0 ? t.amount / t.quantity : t.amount
+        return [
+          format(new Date(t.transaction_date), 'dd/MM/yyyy', { locale: ptBR }),
+          t.description,
+          t.contacts?.name || '-',
+          t.products?.name || '-',
+          (t.quantity || 0).toString(),
+          formatCurrency(unitPrice),
+          formatCurrency(t.amount),
+        ]
+      })
 
       autoTable(doc, {
         startY: currentY + 6,
-        head: [['Data', 'Descrição', 'Cliente', 'Produto', 'Qtd', 'Valor']],
+        head: [['Data', 'Descrição', 'Cliente', 'Produto', 'Qtd', 'Vlr Unit.', 'Valor Total']],
         body: vendasData,
-        foot: [[{ content: `Subtotal:`, colSpan: 4, styles: { halign: 'right', fontStyle: 'bold', fillColor: [220, 252, 231] } }, { content: totalQtdVendas.toString(), styles: { halign: 'right', fontStyle: 'bold', fillColor: [220, 252, 231] } }, { content: formatCurrency(totalVendas), styles: { halign: 'right', fontStyle: 'bold', fillColor: [220, 252, 231] } }]],
+        foot: [[{ content: `Subtotal:`, colSpan: 4, styles: { halign: 'right', fontStyle: 'bold', fillColor: [220, 252, 231] } }, { content: totalQtdVendas.toString(), styles: { halign: 'right', fontStyle: 'bold', fillColor: [220, 252, 231] } }, { content: '', styles: { fillColor: [220, 252, 231] } }, { content: formatCurrency(totalVendas), styles: { halign: 'right', fontStyle: 'bold', fillColor: [220, 252, 231] } }]],
         styles: { fontSize: 8, cellPadding: 2 },
         headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
         footStyles: { fillColor: [220, 252, 231], textColor: [16, 185, 129], fontStyle: 'bold' },
         columnStyles: {
           0: { cellWidth: 22 },
-          1: { cellWidth: 45 },
-          2: { cellWidth: 30 },
-          3: { cellWidth: 30 },
-          4: { cellWidth: 15, halign: 'right' },
-          5: { cellWidth: 25, halign: 'right' },
+          1: { cellWidth: 40 },
+          2: { cellWidth: 28 },
+          3: { cellWidth: 28 },
+          4: { cellWidth: 12, halign: 'right' },
+          5: { cellWidth: 22, halign: 'right' },
+          6: { cellWidth: 22, halign: 'right' },
         },
         alternateRowStyles: { fillColor: [245, 245, 245] },
         margin: { left: 14, right: 14 },
@@ -268,30 +273,35 @@ export default function RelatoriosPage() {
       doc.text(`Compras (${compras.length} itens - Total: ${formatCurrency(totalCompras)})`, 14, currentY)
       doc.setTextColor(0, 0, 0)
 
-      const comprasData = compras.map(t => [
-        format(new Date(t.transaction_date), 'dd/MM/yyyy', { locale: ptBR }),
-        t.description,
-        t.contacts?.name || '-',
-        t.products?.name || '-',
-        (t.quantity || 0).toString(),
-        formatCurrency(t.amount),
-      ])
+      const comprasData = compras.map(t => {
+        const unitPrice = t.quantity && t.quantity > 0 ? t.amount / t.quantity : t.amount
+        return [
+          format(new Date(t.transaction_date), 'dd/MM/yyyy', { locale: ptBR }),
+          t.description,
+          t.contacts?.name || '-',
+          t.products?.name || '-',
+          (t.quantity || 0).toString(),
+          formatCurrency(unitPrice),
+          formatCurrency(t.amount),
+        ]
+      })
 
       autoTable(doc, {
         startY: currentY + 6,
-        head: [['Data', 'Descrição', 'Fornecedor', 'Produto', 'Qtd', 'Valor']],
+        head: [['Data', 'Descrição', 'Fornecedor', 'Produto', 'Qtd', 'Vlr Unit.', 'Valor Total']],
         body: comprasData,
-        foot: [[{ content: `Subtotal:`, colSpan: 4, styles: { halign: 'right', fontStyle: 'bold', fillColor: [219, 234, 254] } }, { content: totalQtdCompras.toString(), styles: { halign: 'right', fontStyle: 'bold', fillColor: [219, 234, 254] } }, { content: formatCurrency(totalCompras), styles: { halign: 'right', fontStyle: 'bold', fillColor: [219, 234, 254] } }]],
+        foot: [[{ content: `Subtotal:`, colSpan: 4, styles: { halign: 'right', fontStyle: 'bold', fillColor: [219, 234, 254] } }, { content: totalQtdCompras.toString(), styles: { halign: 'right', fontStyle: 'bold', fillColor: [219, 234, 254] } }, { content: '', styles: { fillColor: [219, 234, 254] } }, { content: formatCurrency(totalCompras), styles: { halign: 'right', fontStyle: 'bold', fillColor: [219, 234, 254] } }]],
         styles: { fontSize: 8, cellPadding: 2 },
         headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
         footStyles: { fillColor: [219, 234, 254], textColor: [59, 130, 246], fontStyle: 'bold' },
         columnStyles: {
           0: { cellWidth: 22 },
-          1: { cellWidth: 45 },
-          2: { cellWidth: 30 },
-          3: { cellWidth: 30 },
-          4: { cellWidth: 15, halign: 'right' },
-          5: { cellWidth: 25, halign: 'right' },
+          1: { cellWidth: 40 },
+          2: { cellWidth: 28 },
+          3: { cellWidth: 28 },
+          4: { cellWidth: 12, halign: 'right' },
+          5: { cellWidth: 22, halign: 'right' },
+          6: { cellWidth: 22, halign: 'right' },
         },
         alternateRowStyles: { fillColor: [245, 245, 245] },
         margin: { left: 14, right: 14 },
@@ -672,32 +682,41 @@ export default function RelatoriosPage() {
                           <TableHead className="min-w-[120px] hidden sm:table-cell">Cliente</TableHead>
                           <TableHead className="min-w-[120px] hidden md:table-cell">Produto</TableHead>
                           <TableHead className="text-right min-w-[80px]">Qtd</TableHead>
-                          <TableHead className="text-right min-w-[100px]">Valor</TableHead>
+                          <TableHead className="text-right min-w-[100px] hidden lg:table-cell">Vlr Unit.</TableHead>
+                          <TableHead className="text-right min-w-[100px]">Valor Total</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {vendas.map((transaction) => (
-                          <TableRow key={transaction.id}>
-                            <TableCell className="whitespace-nowrap text-xs sm:text-sm">
-                              {format(new Date(transaction.transaction_date), 'dd/MM/yyyy', { locale: ptBR })}
-                            </TableCell>
-                            <TableCell className="max-w-[200px] truncate text-xs sm:text-sm">
-                              {transaction.description}
-                            </TableCell>
-                            <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
-                              {transaction.contacts?.name || '-'}
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell text-xs sm:text-sm">
-                              {transaction.products?.name || '-'}
-                            </TableCell>
-                            <TableCell className="text-right whitespace-nowrap text-xs sm:text-sm">
-                              {transaction.quantity || 0}
-                            </TableCell>
-                            <TableCell className="text-right font-medium whitespace-nowrap text-sm sm:text-base text-green-600">
-                              {formatCurrency(transaction.amount)}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {vendas.map((transaction) => {
+                          const unitPrice = transaction.quantity && transaction.quantity > 0
+                            ? transaction.amount / transaction.quantity
+                            : transaction.amount
+                          return (
+                            <TableRow key={transaction.id}>
+                              <TableCell className="whitespace-nowrap text-xs sm:text-sm">
+                                {format(new Date(transaction.transaction_date), 'dd/MM/yyyy', { locale: ptBR })}
+                              </TableCell>
+                              <TableCell className="max-w-[200px] truncate text-xs sm:text-sm">
+                                {transaction.description}
+                              </TableCell>
+                              <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
+                                {transaction.contacts?.name || '-'}
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell text-xs sm:text-sm">
+                                {transaction.products?.name || '-'}
+                              </TableCell>
+                              <TableCell className="text-right whitespace-nowrap text-xs sm:text-sm">
+                                {transaction.quantity || 0}
+                              </TableCell>
+                              <TableCell className="hidden lg:table-cell text-right whitespace-nowrap text-xs sm:text-sm text-muted-foreground">
+                                {formatCurrency(unitPrice)}
+                              </TableCell>
+                              <TableCell className="text-right font-medium whitespace-nowrap text-sm sm:text-base text-green-600">
+                                {formatCurrency(transaction.amount)}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
                         <TableRow className="bg-green-50 dark:bg-green-950 font-bold">
                           <TableCell colSpan={4} className="text-right">
                             Subtotal de Vendas ({vendas.length} itens):
@@ -705,6 +724,7 @@ export default function RelatoriosPage() {
                           <TableCell className="text-right text-green-600 font-bold text-sm">
                             {totalQuantidadeVendas}
                           </TableCell>
+                          <TableCell className="hidden lg:table-cell"></TableCell>
                           <TableCell className="text-right text-green-600 font-bold text-base">
                             {formatCurrency(totalVendas)}
                           </TableCell>
@@ -749,32 +769,41 @@ export default function RelatoriosPage() {
                           <TableHead className="min-w-[120px] hidden sm:table-cell">Fornecedor</TableHead>
                           <TableHead className="min-w-[120px] hidden md:table-cell">Produto</TableHead>
                           <TableHead className="text-right min-w-[80px]">Qtd</TableHead>
-                          <TableHead className="text-right min-w-[100px]">Valor</TableHead>
+                          <TableHead className="text-right min-w-[100px] hidden lg:table-cell">Vlr Unit.</TableHead>
+                          <TableHead className="text-right min-w-[100px]">Valor Total</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {compras.map((transaction) => (
-                          <TableRow key={transaction.id}>
-                            <TableCell className="whitespace-nowrap text-xs sm:text-sm">
-                              {format(new Date(transaction.transaction_date), 'dd/MM/yyyy', { locale: ptBR })}
-                            </TableCell>
-                            <TableCell className="max-w-[200px] truncate text-xs sm:text-sm">
-                              {transaction.description}
-                            </TableCell>
-                            <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
-                              {transaction.contacts?.name || '-'}
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell text-xs sm:text-sm">
-                              {transaction.products?.name || '-'}
-                            </TableCell>
-                            <TableCell className="text-right whitespace-nowrap text-xs sm:text-sm">
-                              {transaction.quantity || 0}
-                            </TableCell>
-                            <TableCell className="text-right font-medium whitespace-nowrap text-sm sm:text-base text-blue-600">
-                              {formatCurrency(transaction.amount)}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {compras.map((transaction) => {
+                          const unitPrice = transaction.quantity && transaction.quantity > 0
+                            ? transaction.amount / transaction.quantity
+                            : transaction.amount
+                          return (
+                            <TableRow key={transaction.id}>
+                              <TableCell className="whitespace-nowrap text-xs sm:text-sm">
+                                {format(new Date(transaction.transaction_date), 'dd/MM/yyyy', { locale: ptBR })}
+                              </TableCell>
+                              <TableCell className="max-w-[200px] truncate text-xs sm:text-sm">
+                                {transaction.description}
+                              </TableCell>
+                              <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
+                                {transaction.contacts?.name || '-'}
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell text-xs sm:text-sm">
+                                {transaction.products?.name || '-'}
+                              </TableCell>
+                              <TableCell className="text-right whitespace-nowrap text-xs sm:text-sm">
+                                {transaction.quantity || 0}
+                              </TableCell>
+                              <TableCell className="hidden lg:table-cell text-right whitespace-nowrap text-xs sm:text-sm text-muted-foreground">
+                                {formatCurrency(unitPrice)}
+                              </TableCell>
+                              <TableCell className="text-right font-medium whitespace-nowrap text-sm sm:text-base text-blue-600">
+                                {formatCurrency(transaction.amount)}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
                         <TableRow className="bg-blue-50 dark:bg-blue-950 font-bold">
                           <TableCell colSpan={4} className="text-right">
                             Subtotal de Compras ({compras.length} itens):
@@ -782,6 +811,7 @@ export default function RelatoriosPage() {
                           <TableCell className="text-right text-blue-600 font-bold text-sm">
                             {totalQuantidadeCompras}
                           </TableCell>
+                          <TableCell className="hidden lg:table-cell"></TableCell>
                           <TableCell className="text-right text-blue-600 font-bold text-base">
                             {formatCurrency(totalCompras)}
                           </TableCell>
