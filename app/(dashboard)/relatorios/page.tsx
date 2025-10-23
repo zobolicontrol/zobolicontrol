@@ -166,6 +166,98 @@ export default function RelatoriosPage() {
     document.body.removeChild(link)
   }
 
+  const exportToPDF = async () => {
+    const { jsPDF } = await import('jspdf')
+    await import('jspdf-autotable')
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const doc = new jsPDF() as any
+
+    // Título
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Relatório Financeiro - ZoboliControl', 14, 20)
+
+    // Informações do Período
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'normal')
+    let periodText = ''
+    if (periodType === 'monthly') {
+      const monthName = months.find(m => m.value === selectedMonth)?.label
+      periodText = `Período: ${monthName}/${selectedYear}`
+    } else if (customStartDate && customEndDate) {
+      periodText = `Período: ${format(customStartDate, 'dd/MM/yyyy', { locale: ptBR })} a ${format(customEndDate, 'dd/MM/yyyy', { locale: ptBR })}`
+    }
+    doc.text(periodText, 14, 28)
+    doc.text(`Data de Geração: ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}`, 14, 34)
+
+    // Resumo Financeiro
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Resumo Financeiro', 14, 44)
+
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    const summaryY = 52
+    doc.text(`Total Entradas (Compras): ${formatCurrency(totalEntradas)}`, 14, summaryY)
+    doc.text(`Total Saídas (Vendas): ${formatCurrency(totalSaidas)}`, 14, summaryY + 6)
+    doc.text(`Total Despesas: ${formatCurrency(totalDespesas)}`, 14, summaryY + 12)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`Fluxo de Caixa: ${formatCurrency(fluxoCaixa)}`, 14, summaryY + 18)
+
+    // Tabela de Transações
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Transações do Período', 14, summaryY + 28)
+
+    const tableData = filteredTransactions.map(t => [
+      format(new Date(t.transaction_date), 'dd/MM/yyyy', { locale: ptBR }),
+      typeLabels[t.type],
+      t.description,
+      t.contacts?.name || '-',
+      t.products?.name || t.expense_types?.name || '-',
+      formatCurrency(t.amount),
+    ])
+
+    doc.autoTable({
+      startY: summaryY + 34,
+      head: [['Data', 'Tipo', 'Descrição', 'Contato', 'Produto/Categoria', 'Valor']],
+      body: tableData,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 22 },
+        1: { cellWidth: 20 },
+        2: { cellWidth: 45 },
+        3: { cellWidth: 35 },
+        4: { cellWidth: 35 },
+        5: { cellWidth: 25, halign: 'right' },
+      },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      margin: { left: 14, right: 14 },
+    })
+
+    // Rodapé
+    const pageCount = doc.internal.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.text(
+        `Página ${i} de ${pageCount}`,
+        doc.internal.pageSize.getWidth() / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: 'center' }
+      )
+    }
+
+    // Salvar
+    const fileName = periodType === 'monthly'
+      ? `relatorio_${selectedMonth}_${selectedYear}.pdf`
+      : `relatorio_${format(customStartDate!, 'ddMMyyyy')}_${format(customEndDate!, 'ddMMyyyy')}.pdf`
+    doc.save(fileName)
+  }
+
   let filteredTransactions = transactions
 
   if (filterType !== 'all') {
@@ -424,16 +516,16 @@ export default function RelatoriosPage() {
       {/* Tabela de Transações */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <CardTitle>Transações do Período</CardTitle>
               <CardDescription>
                 {filteredTransactions.length} transação(ões) encontrada(s)
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <Select value={filterType} onValueChange={(v) => setFilterType(v as 'all' | 'entrada' | 'saida' | 'despesa')}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Filtrar por tipo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -443,24 +535,30 @@ export default function RelatoriosPage() {
                   <SelectItem value="despesa">Despesas</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={exportToCSV} variant="outline" size="sm">
-                <Download className="mr-2 h-4 w-4" />
-                Exportar CSV
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={exportToCSV} variant="outline" size="sm" className="flex-1 sm:flex-none">
+                  <Download className="mr-2 h-4 w-4" />
+                  <span className="hidden sm:inline">Exportar </span>CSV
+                </Button>
+                <Button onClick={exportToPDF} variant="outline" size="sm" className="flex-1 sm:flex-none">
+                  <Download className="mr-2 h-4 w-4" />
+                  <span className="hidden sm:inline">Exportar </span>PDF
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border">
+          <div className="rounded-lg border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Contato</TableHead>
-                  <TableHead>Produto/Categoria</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead className="min-w-[100px]">Data</TableHead>
+                  <TableHead className="min-w-[80px]">Tipo</TableHead>
+                  <TableHead className="min-w-[150px]">Descrição</TableHead>
+                  <TableHead className="min-w-[120px] hidden sm:table-cell">Contato</TableHead>
+                  <TableHead className="min-w-[120px] hidden md:table-cell">Produto/Categoria</TableHead>
+                  <TableHead className="text-right min-w-[100px]">Valor</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -479,22 +577,22 @@ export default function RelatoriosPage() {
                 ) : (
                   filteredTransactions.map((transaction) => (
                     <TableRow key={transaction.id}>
-                      <TableCell className="whitespace-nowrap">
-                        {formatDateTime(transaction.transaction_date)}
+                      <TableCell className="whitespace-nowrap text-xs sm:text-sm">
+                        {format(new Date(transaction.transaction_date), 'dd/MM/yyyy', { locale: ptBR })}
                       </TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${typeBadgeColors[transaction.type]}`}>
                           {typeLabels[transaction.type]}
                         </span>
                       </TableCell>
-                      <TableCell>{transaction.description}</TableCell>
-                      <TableCell>
+                      <TableCell className="max-w-[200px] truncate text-xs sm:text-sm">{transaction.description}</TableCell>
+                      <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
                         {transaction.contacts?.name || '-'}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell text-xs sm:text-sm">
                         {transaction.products?.name || transaction.expense_types?.name || '-'}
                       </TableCell>
-                      <TableCell className="text-right font-medium">
+                      <TableCell className="text-right font-medium whitespace-nowrap text-sm sm:text-base">
                         {formatCurrency(transaction.amount)}
                       </TableCell>
                     </TableRow>

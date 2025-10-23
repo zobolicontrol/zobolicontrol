@@ -127,37 +127,37 @@ export default async function DashboardPage() {
               {last10Transactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b pb-4 last:border-0 last:pb-0"
                 >
-                  <div className="space-y-1">
-                    <p className="font-medium">{transaction.description}</p>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <p className="font-medium truncate">{transaction.description}</p>
+                    <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
                       <span className={typeColors[transaction.type]}>
                         {typeLabels[transaction.type]}
                       </span>
                       {transaction.contacts && (
                         <>
-                          <span>•</span>
-                          <span>{transaction.contacts.name}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="truncate max-w-[150px]">{transaction.contacts.name}</span>
                         </>
                       )}
                       {transaction.products && (
                         <>
-                          <span>•</span>
-                          <span>{transaction.products.name}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="truncate max-w-[150px]">{transaction.products.name}</span>
                         </>
                       )}
                       {transaction.expense_types && (
                         <>
-                          <span>•</span>
-                          <span>{transaction.expense_types.name}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="truncate max-w-[120px]">{transaction.expense_types.name}</span>
                         </>
                       )}
-                      <span>•</span>
-                      <span>{formatDate(transaction.transaction_date)}</span>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="text-xs">{formatDate(transaction.transaction_date)}</span>
                     </div>
                   </div>
-                  <div className={`font-bold ${typeColors[transaction.type]}`}>
+                  <div className={`font-bold text-lg sm:text-xl whitespace-nowrap ${typeColors[transaction.type]}`}>
                     {formatCurrency(transaction.amount)}
                   </div>
                 </div>
