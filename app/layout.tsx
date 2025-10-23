@@ -14,10 +14,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZoboliControl - Sistema de Gestão",
-  description: "Sistema de gestão para empresas de insumos agrícolas",
+  title: "ZoboliControl - Sistema de Controle Gerencial",
+  description: "Sistema completo de gestão para empresas de insumos agrícolas",
   manifest: "/manifest.json",
   themeColor: "#10b981",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/icon-192.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

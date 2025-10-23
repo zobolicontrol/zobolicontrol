@@ -1,7 +1,7 @@
 {
-  "name": "ZoboliControl - Sistema de Gestão",
+  "name": "ZoboliControl - Sistema de Controle Gerencial",
   "short_name": "ZoboliControl",
-  "description": "Sistema de gestão para empresas de insumos agrícolas",
+  "description": "Sistema completo de gestão para empresas de insumos agrícolas",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
