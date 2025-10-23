@@ -29,35 +29,35 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* Lado Esquerdo - Imagem/Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-green-600 to-green-800 p-12 flex-col justify-between relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-800 to-slate-950 p-12 flex-col justify-between relative overflow-hidden">
         {/* Padrão de fundo decorativo */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+          <div className="absolute top-20 left-20 w-72 h-72 bg-green-500 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 right-20 w-96 h-96 bg-green-600 rounded-full blur-3xl"></div>
         </div>
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-8">
+          <div className="flex items-center justify-center mb-12">
             <Image
               src="/logo.png"
               alt="ZoboliControl"
-              width={200}
-              height={60}
-              className="h-auto"
+              width={400}
+              height={120}
+              className="h-auto w-full max-w-md"
               priority
             />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-4">
+          <h1 className="text-4xl font-bold text-white mb-4 text-center">
             Bem-vindo ao ZoboliControl
           </h1>
-          <p className="text-green-100 text-lg leading-relaxed">
+          <p className="text-slate-300 text-lg leading-relaxed text-center">
             Sistema completo de gestão para empresas de insumos agrícolas.
             Controle vendas, compras, despesas e muito mais.
           </p>
         </div>
 
         <div className="relative z-10">
-          <p className="text-green-100 text-sm">
+          <p className="text-slate-400 text-sm text-center">
             © 2025 ZoboliControl - Sistema de Controle Gerencial
           </p>
         </div>
@@ -67,13 +67,13 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-900">
         <div className="w-full max-w-md">
           {/* Logo para mobile */}
-          <div className="lg:hidden flex justify-center mb-8">
+          <div className="lg:hidden flex justify-center mb-12">
             <Image
               src="/logo.png"
               alt="ZoboliControl"
-              width={180}
-              height={54}
-              className="h-auto"
+              width={320}
+              height={96}
+              className="h-auto w-full max-w-sm px-4"
               priority
             />
           </div>

@@ -1,5 +1,6 @@
 import { Sidebar, MobileSidebar } from '@/components/sidebar'
 import { Toaster } from '@/components/ui/sonner'
+import Image from 'next/image'
 
 export default function DashboardLayout({
   children,
@@ -16,11 +17,15 @@ export default function DashboardLayout({
         {/* Header Mobile */}
         <div className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background px-4 lg:hidden">
           <MobileSidebar />
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-lg font-bold text-primary-foreground">Z</span>
-            </div>
-            <span className="text-lg font-bold">ZoboliControl</span>
+          <div className="flex items-center flex-1 justify-center">
+            <Image
+              src="/logo.png"
+              alt="ZoboliControl"
+              width={160}
+              height={48}
+              className="h-auto"
+              priority
+            />
           </div>
         </div>
 

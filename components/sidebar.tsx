@@ -203,17 +203,15 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       {/* Logo */}
-      <div className="flex h-16 items-center border-b px-6">
-        <div className="flex items-center gap-2">
-          <Image
-            src="/logo.png"
-            alt="ZoboliControl"
-            width={180}
-            height={54}
-            className="h-auto"
-            priority
-          />
-        </div>
+      <div className="flex h-20 items-center justify-center border-b px-4 py-3">
+        <Image
+          src="/logo.png"
+          alt="ZoboliControl"
+          width={200}
+          height={60}
+          className="h-auto w-full max-w-[200px]"
+          priority
+        />
       </div>
 
       {/* Navigation */}
