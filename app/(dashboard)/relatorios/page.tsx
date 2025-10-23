@@ -171,13 +171,33 @@ export default function RelatoriosPage() {
 
     const doc = new jsPDF()
 
+    // Adicionar logo no cabeçalho
+    try {
+      const img = new Image()
+      img.src = '/logo.png'
+      await new Promise((resolve) => {
+        img.onload = resolve
+        img.onerror = resolve // Continue mesmo se falhar
+      })
+      if (img.complete && img.naturalWidth > 0) {
+        // Logo centralizada no topo
+        const imgWidth = 50
+        const imgHeight = (img.naturalHeight / img.naturalWidth) * imgWidth
+        const xPos = (doc.internal.pageSize.getWidth() - imgWidth) / 2
+        doc.addImage(img, 'PNG', xPos, 10, imgWidth, imgHeight)
+      }
+    } catch (error) {
+      // Se falhar ao carregar a logo, continua sem ela
+      console.error('Erro ao carregar logo no PDF:', error)
+    }
+
     // Título
-    doc.setFontSize(18)
+    doc.setFontSize(16)
     doc.setFont('helvetica', 'bold')
-    doc.text('Relatório Financeiro - ZoboliControl', 14, 20)
+    doc.text('Relatório Financeiro', doc.internal.pageSize.getWidth() / 2, 32, { align: 'center' })
 
     // Informações do Período
-    doc.setFontSize(11)
+    doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
     let periodText = ''
     if (periodType === 'monthly') {
@@ -186,24 +206,24 @@ export default function RelatoriosPage() {
     } else if (customStartDate && customEndDate) {
       periodText = `Período: ${format(customStartDate, 'dd/MM/yyyy', { locale: ptBR })} a ${format(customEndDate, 'dd/MM/yyyy', { locale: ptBR })}`
     }
-    doc.text(periodText, 14, 28)
-    doc.text(`Data de Geração: ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}`, 14, 34)
+    doc.text(periodText, 14, 40)
+    doc.text(`Data de Geração: ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}`, 14, 45)
 
     // Resumo Financeiro
-    doc.setFontSize(14)
+    doc.setFontSize(12)
     doc.setFont('helvetica', 'bold')
-    doc.text('Resumo Financeiro', 14, 44)
+    doc.text('Resumo Financeiro', 14, 55)
 
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
-    const summaryY = 52
+    const summaryY = 63
     doc.text(`Total Vendas: ${formatCurrency(totalSaidas)}`, 14, summaryY)
     doc.text(`Total Compras: ${formatCurrency(totalEntradas)}`, 14, summaryY + 6)
     doc.text(`Total Despesas: ${formatCurrency(totalDespesas)}`, 14, summaryY + 12)
     doc.setFont('helvetica', 'bold')
     doc.text(`Fluxo de Caixa: ${formatCurrency(fluxoCaixa)}`, 14, summaryY + 18)
 
-    let currentY = summaryY + 30
+    let currentY = summaryY + 28
 
     // Seção de Vendas
     const vendas = filteredTransactions.filter(t => t.type === 'saida')
