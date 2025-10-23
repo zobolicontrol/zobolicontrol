@@ -168,10 +168,9 @@ export default function RelatoriosPage() {
 
   const exportToPDF = async () => {
     const { jsPDF } = await import('jspdf')
-    await import('jspdf-autotable')
+    const autoTable = (await import('jspdf-autotable')).default
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const doc = new jsPDF() as any
+    const doc = new jsPDF()
 
     // Título
     doc.setFontSize(18)
@@ -219,7 +218,8 @@ export default function RelatoriosPage() {
       formatCurrency(t.amount),
     ])
 
-    doc.autoTable({
+    // Usar autoTable corretamente
+    autoTable(doc, {
       startY: summaryY + 34,
       head: [['Data', 'Tipo', 'Descrição', 'Contato', 'Produto/Categoria', 'Valor']],
       body: tableData,
@@ -238,7 +238,7 @@ export default function RelatoriosPage() {
     })
 
     // Rodapé
-    const pageCount = doc.internal.getNumberOfPages()
+    const pageCount = doc.getNumberOfPages()
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i)
       doc.setFontSize(8)

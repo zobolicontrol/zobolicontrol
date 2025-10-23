@@ -44,7 +44,7 @@ export function DashboardChart({ data }: { data: ChartData[] }) {
           tickFormatter={(value) => `R$ ${value.toLocaleString('pt-BR')}`}
         />
         <Tooltip
-          formatter={(value: number) => formatCurrency(value)}
+          formatter={(value: number) => [formatCurrency(value), 'Total']}
           contentStyle={{
             backgroundColor: '#ffffff',
             border: '1px solid #e2e8f0',
